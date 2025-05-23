@@ -5,7 +5,7 @@
 # Import the required packages
 import torch
 import torch.nn as nn
-from layers import CNNLayer3d, CNNLayer3dPlain
+from .layers import CNNLayer3d, CNNLayer3dPlain
 
 class OcclusionsNetwork(nn.Module):
     """
@@ -32,8 +32,11 @@ class OcclusionsNetwork(nn.Module):
         self.c2 = CNNLayer3d(in_channels=8, out_channels=8, kernel_size=(3,3,3))
         self.c3 = CNNLayer3d(in_channels=8, out_channels=8, kernel_size=(3,3,3))
         self.c4 = CNNLayer3d(in_channels=8, out_channels=8, kernel_size=(3,3,3))
+        self.c5 = CNNLayer3d(in_channels=8, out_channels=8, kernel_size=(3,3,3))
+        self.c6 = CNNLayer3d(in_channels=8, out_channels=8, kernel_size=(3,3,3))
+        self.c7 = CNNLayer3d(in_channels=8, out_channels=8, kernel_size=(3,3,3))
         # plain final layer to 3 channels
-        self.c5 = CNNLayer3dPlain(in_channels=8, out_channels=3, kernel_size=(3,3,3))
+        self.c8 = CNNLayer3dPlain(in_channels=8, out_channels=3, kernel_size=(3,3,3))
 
         self.v_sz = v_sz
         self.u_sz = u_sz
@@ -67,7 +70,10 @@ class OcclusionsNetwork(nn.Module):
         h = self.c2(h)    # [B,8, uv, H, W]
         h = self.c3(h)    # [B,8, uv, H, W]
         h = self.c4(h)    # [B,8, uv, H, W]
-        h = torch.tanh(self.c5(h))  # [B,3, uv, H, W]
+        h = self.c5(h)    # [B,8, uv, H, W]
+        h = self.c6(h)    # [B,8, uv, H, W]
+        h = self.c7(h)    # [B,8, uv, H, W]
+        h = torch.tanh(self.c8(h))  # [B,3, uv, H, W]
 
         # 3) reshape back to [B, H, W, V, U, 3]
         #    permute [B,3, uv, H, W] → [B, uv, H, W, 3]

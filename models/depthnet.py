@@ -3,8 +3,9 @@
 # Date Created: May 7 2025
 
 # Import the required packages
+import torch
 import torch.nn as nn
-from layers import CNNLayer2d, CNNLayer2dPlain
+from .layers import CNNLayer2d, CNNLayer2dPlain
 
 class DepthNetwork(nn.Module):
     """
@@ -29,19 +30,23 @@ class DepthNetwork(nn.Module):
 
         # convolutional backbone
         self.c1 = CNNLayer2d(3,    16,   kernel_size=(3,3), stride=1, dilation=1)
-        self.c2 = CNNLayer2d(16,   64,   kernel_size=(3,3), stride=1, dilation=1)
-        self.c3 = CNNLayer2d(64,  128,   kernel_size=(3,3), stride=1, dilation=1)
-        self.c4 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=2)
-        self.c5 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=4)
-        self.c6 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=8)
-        self.c7 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=16)
-        self.c8 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=1)
+        self.c2 = CNNLayer2d(16,   32,   kernel_size=(3,3), stride=1, dilation=1)
+        self.c3 = CNNLayer2d(32,   64,   kernel_size=(3,3), stride=1, dilation=1)
+        self.c4 = CNNLayer2d(64,  128,   kernel_size=(3,3), stride=1, dilation=1)
+        self.c5 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=2)
+        self.c6 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=4)
+        self.c7 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=8)
+        self.c8 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=16)
+        self.c9 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=32)
+        self.c10 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=64)
+        self.c11 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=1)
+        self.c12 = CNNLayer2d(128, 128,   kernel_size=(3,3), stride=1, dilation=1)
 
         # project to num_views channels
-        self.c9 = CNNLayer2d(128, num_views, kernel_size=(3,3), stride=1, dilation=1)
+        self.c13 = CNNLayer2d(128, num_views, kernel_size=(3,3), stride=1, dilation=1)
 
         # final plain conv + tanh
-        self.c10 = CNNLayer2dPlain(
+        self.c14 = CNNLayer2dPlain(
             in_channels=num_views,
             out_channels=num_views,
             kernel_size=(3,3),
@@ -67,16 +72,20 @@ class DepthNetwork(nn.Module):
         B, C, H, W = x.shape
 
         h = self.c1(x)   # [B,16,H,W]
-        h = self.c2(h)   # [B,64,H,W]
-        h = self.c3(h)   # [B,128,H,W]
+        h = self.c2(h)   # [B,32,H,W]
+        h = self.c3(h)   # [B,64,H,W]
         h = self.c4(h)   # [B,128,H,W]
         h = self.c5(h)   # [B,128,H,W]
         h = self.c6(h)   # [B,128,H,W]
         h = self.c7(h)   # [B,128,H,W]
         h = self.c8(h)   # [B,128,H,W]
+        h = self.c9(h)   # [B,128,H,W]
+        h = self.c10(h)   # [B,128,H,W]
+        h = self.c11(h)   # [B,128,H,W]
+        h = self.c12(h)   # [B,128,H,W]
 
-        h = self.c9(h)   # [B, V*U, H, W]
-        h = self.c10(h)  # [B, V*U, H, W]
+        h = self.c13(h)   # [B, V*U, H, W]
+        h = self.c14(h)  # [B, V*U, H, W]
 
         # scaled tanh
         h = self.disp_mult * torch.tanh(h)

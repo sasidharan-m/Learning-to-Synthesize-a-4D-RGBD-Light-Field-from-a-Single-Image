@@ -8,20 +8,23 @@ from data.dataloader import getDataloader
 from models.model import ForwardModel
 from losses.losses import tvLoss, depthConsistencyLoss
 import torch.optim as optim
+import os
+from tqdm import tqdm
 
-root              = "/home/sasidharan/Projects/Plenoptic Camera/Datasets/EPFL/Sub-Aperture Images/Train"
-grid              = (13, 13)                # U×V views
-crop_size         = (192, 192)              # spatial-crop height & width
-batch_size        = 1
-epochs            = 100
-learning_rate     = 1e-5
-disp_mult         = 4.0
-lam_tv            = 0.01
-lam_dc            = 0.005
-lfsize            = (432,620,9,9)
+training_data_path              = "/home/sasidharan/Projects/Plenoptic Camera/Datasets/Flower Dataset/Sub-Aperture Images/Train"
+weights_save_path               = "/home/sasidharan/Projects/Plenoptic Camera/Code/Learning-to-Synthesize-a-4D-RGBD-Light-Field-from-a-Single-Image/weights"
+grid                            = (13, 13)                # U×V views
+crop_size                       = (256, 256)              # spatial-crop height & width
+batch_size                      = 2
+epochs                          = 1000
+learning_rate                   = 1e-4
+disp_mult                       = 4.0
+lam_tv                          = 0.01
+lam_dc                          = 0.005
+lfsize                          = (432,622,9,9)
 
 loader = getDataloader(
-    root, grid, spatial_crop=crop_size,
+    training_data_path, grid, spatial_crop=crop_size,
     batch_size=batch_size,
     resize=None,               
     num_workers=2
@@ -34,7 +37,8 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 for epoch in range(epochs):
     model.train()
     total_loss = 0.0
-    for aif_batch, lf_batch in loader:
+    loop = tqdm(enumerate(loader), total=len(loader), ncols=80, desc=f"Epoch [{epoch+1}/{epochs}]", leave=True, dynamic_ncols=False)
+    for i, (aif_batch, lf_batch) in loop:
         # move to device
         aif_batch = aif_batch.to(device)          # [B,3,h,w]
         lf_batch  = lf_batch.to(device)           # [B,h,w,V,U,3]
@@ -72,12 +76,13 @@ for epoch in range(epochs):
     if(((epoch + 1) % 1 == 0) or epoch == 0):
         print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}")
 
-    if(((epoch + 1) % 10 == 0) and epoch > 1):
+    if(((epoch + 1) % 100 == 0) and epoch > 1):
         ckpt = {
             "epoch": epoch + 1,
             "model_state": model.state_dict(),
             "optim_state": optimizer.state_dict(),
             "loss": avg_loss,
         }
-        torch.save(ckpt, f"checkpoint_epoch{epoch+1}.pth")
-torch.save(model.state_dict(), "forward_model_final.pth")
+        weights_name = f"checkpoint_epoch{epoch+1}.pth"
+        torch.save(ckpt, os.path.join(weights_save_path, weights_name))
+torch.save(model.state_dict(), os.path.join(weights_save_path, "forward_model_final.pth"))

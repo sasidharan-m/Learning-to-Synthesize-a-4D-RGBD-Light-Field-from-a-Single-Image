@@ -81,7 +81,7 @@ class LFSubApertureDataset(Dataset):
                 img_t = img_t.pow(gamma)
 
                 # normalize to [-1,1]
-                img_t = img_t * 2.0 - 1.0
+                img_t = (img_t - 0.5) * 2.0
                 
                 row.append(img_t)
             views.append(torch.stack(row, dim=0))  # [V,3,H,W]

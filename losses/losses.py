@@ -5,6 +5,7 @@
 # Import required packages
 import torch
 import torch.nn.functional as F
+import numpy as np
 
 
 def transformRayDepths(ray_depths, u_step, v_step, lfsize):
@@ -26,71 +27,93 @@ def transformRayDepths(ray_depths, u_step, v_step, lfsize):
     device = ray_depths.device
     dtype  = torch.float32
 
-    # 1) meshgrid for b, y, x, v, u
+    # Meshgrid for b, y, x, v, u
     b_idx, y_idx, x_idx, v_idx, u_idx = torch.meshgrid(
         torch.arange(B, device=device, dtype=dtype),
         torch.arange(H, device=device, dtype=dtype),
         torch.arange(W, device=device, dtype=dtype),
-        torch.arange(V, device=device, dtype=dtype) - (V/2),
-        torch.arange(U, device=device, dtype=dtype) - (U/2),
+        torch.arange(V, device=device, dtype=dtype) - (float(V)/2.0),
+        torch.arange(U, device=device, dtype=dtype) - (float(U)/2.0),
         indexing='ij'
     )
 
-    # 2) warp spatial coords by ray depths
+    # Warp spatial coords by ray depths
     #    y_t, x_t shape [B,H,W,V,U]
     y_t = y_idx + v_step * ray_depths
     x_t = x_idx + u_step * ray_depths
 
-    # 3) compute reparameterized angular coords for indexing
-    v_t = v_idx - v_step + (V/2)
-    u_t = u_idx - u_step + (U/2)
+    # Compute reparameterized angular coords for indexing
+    v_t = v_idx - v_step + (float(V)/2.0)
+    u_t = u_idx - u_step + (float(U)/2.0)
 
-    # 4) floor/ceil and clamp
-    y0 = torch.clamp(torch.floor(y_t), 0, H-1)
-    y1 = torch.clamp(y0 + 1, 0, H-1)
-    x0 = torch.clamp(torch.floor(x_t), 0, W-1)
-    x1 = torch.clamp(x0 + 1, 0, W-1)
+    b_1 = b_idx.to(torch.int32)
+    y_1 = (torch.floor(y_t)).to(torch.int32)
+    y_2 = y_1 + 1
+    x_1 = (torch.floor(x_t)).to(torch.int32)
+    x_2 = x_1 + 1
+    v_1 = (v_t).to(torch.int32)
+    u_1 = (u_t).to(torch.int32)
 
-    v0 = torch.clamp(torch.floor(v_t), 0, V-1)
-    u0 = torch.clamp(torch.floor(u_t), 0, U-1)
+    # Clamp to valid range
+    y_1 = torch.clamp(y_1, 0, H - 1)
+    y_2 = torch.clamp(y_2, 0, H - 1)
+    x_1 = torch.clamp(x_1, 0, W - 1)
+    x_2 = torch.clamp(x_2, 0, W - 1)
+    v_1 = torch.clamp(v_1, 0, V - 1)
+    u_1 = torch.clamp(u_1, 0, U - 1)
 
-    # cast to long for indexing
-    y0l, y1l = y0.long(), y1.long()
-    x0l, x1l = x0.long(), x1.long()
-    v0l = v0.long()
-    u0l = u0.long()
+    # Assemble interpolation indices
+    interp_pts_1 = torch.stack([b_1, y_1, x_1, v_1, u_1], dim=-1)
+    interp_pts_2 = torch.stack([b_1, y_2, x_1, v_1, u_1], dim=-1)
+    interp_pts_3 = torch.stack([b_1, y_1, x_2, v_1, u_1], dim=-1)
+    interp_pts_4 = torch.stack([b_1, y_2, x_2, v_1, u_1], dim=-1)
 
-    # 5) gather helper
-    def gather(g, y_idx, x_idx, v_idx, u_idx):
-        # g: [B,H,W,V,U]
-        # idx arrays all [B,H,W,V,U] longs
-        # flatten spatial+angular dims
-        g_flat = g.reshape(B, -1)              # [B, H*W*V*U]
-        lin_idx = (
-            y_idx * (W*V*U) +
-            x_idx * (V*U) +
-            v_idx * U +
-            u_idx
-        ).reshape(B, -1)                        # [B, H*W*V*U]
-        out = torch.stack([g_flat[b, lin_idx[b]] for b in range(B)], dim=0)
-        return out.view(B, H, W, V, U)
+    # Helper to gather using advanced indexing
+    def gather_nd(params, indices):
+        """
+        A PyTorch equivalent of TensorFlow's tf.gather_nd.
 
-    lf_1 = gather(ray_depths, y0l, x0l, v0l, u0l)
-    lf_2 = gather(ray_depths, y1l, x0l, v0l, u0l)
-    lf_3 = gather(ray_depths, y0l, x1l, v0l, u0l)
-    lf_4 = gather(ray_depths, y1l, x1l, v0l, u0l)
+        Args:
+            params (torch.Tensor): The source tensor to gather values from.
+            indices (torch.LongTensor): Index tensor of shape [..., index_depth], where each entry specifies
+                                        an index into `params`.
 
-    # 6) interpolation weights
-    dy = y_t - y0
-    dx = x_t - x0
-    w1 = (1 - dy) * (1 - dx)
-    w2 = (    dy) * (1 - dx)
-    w3 = (1 - dy) * (    dx)
-    w4 = (    dy) * (    dx)
+        Returns:
+            torch.Tensor: Gathered values.
+        """
+        # indices shape: [*, index_depth]
+        orig_shape = indices.shape[:-1]  # Shape of the output
+        index_depth = indices.shape[-1]
+        
+        # Convert indices to tuple of slices
+        indices = indices.reshape(-1, index_depth).T  # Shape: [index_depth, num_indices]
+        gathered = params[tuple(indices)]  # Advanced indexing
 
-    # 7) combine
-    warped = w1*lf_1 + w2*lf_2 + w3*lf_3 + w4*lf_4
-    return warped
+        return gathered.reshape(orig_shape)
+
+    
+    lf_1 = gather_nd(ray_depths, interp_pts_1)
+    lf_2 = gather_nd(ray_depths, interp_pts_2)
+    lf_3 = gather_nd(ray_depths, interp_pts_3)
+    lf_4 = gather_nd(ray_depths, interp_pts_4)
+
+    # Compute interpolation weights
+    y_1f = y_1.to(dtype)
+    x_1f = x_1.to(dtype)
+    d_y_1 = 1.0 - (y_t - y_1f)
+    d_y_2 = 1.0 - d_y_1
+    d_x_1 = 1.0 - (x_t - x_1f)
+    d_x_2 = 1.0 - d_x_1
+
+    # Interpolation
+    w1 = d_y_1 * d_x_1
+    w2 = d_y_2 * d_x_1
+    w3 = d_y_1 * d_x_2
+    w4 = d_y_2 * d_x_2
+
+    lf = w1 * lf_1 + w2 * lf_2 + w3 * lf_3 + w4 * lf_4
+
+    return lf
 
 def depthConsistencyLoss(x, lfsize):
     """
@@ -167,7 +190,8 @@ def tvLoss(x, lfsize):
     B, H, W, V, U = x.shape
     # reshape to [B, C, H, W] with C = V*U
     C = V*U
-    x_flat = x.permute(0,3,4,1,2).reshape(B, C, H, W)
+    x_flat = x.view(B, H, W, C)
+    x_flat = x_flat.permute(0, 3, 1, 2).contiguous()
 
     # compute derivatives
     dy, dx = imageDerivatives(x_flat, nc=C)

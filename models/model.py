@@ -5,9 +5,9 @@
 # Import the required packages
 import torch
 import torch.nn as nn
-from depthnet import DepthNetwork
-from occlusionnet import OcclusionsNetwork
-from depthrenderer import depthRendering
+from .depthnet import DepthNetwork
+from .occlusionnet import OcclusionsNetwork
+from .depthrenderer import depthRendering
 
 class ForwardModel(nn.Module):
     """

@@ -4,6 +4,7 @@
 
 # Import the required packages
 import torch
+import numpy as np
 
 def depthRendering(central, ray_depths, lfsize):
     """
@@ -33,8 +34,8 @@ def depthRendering(central, ray_depths, lfsize):
     b_vals = torch.arange(B, device=device, dtype=torch.float32)
     y_vals = torch.arange(H, device=device, dtype=torch.float32)
     x_vals = torch.arange(W, device=device, dtype=torch.float32)
-    v_vals = torch.arange(V, device=device, dtype=torch.float32) - V / 2.0
-    u_vals = torch.arange(U, device=device, dtype=torch.float32) - U / 2.0
+    v_vals = torch.arange(V, device=device, dtype=torch.float32) - float(V) / 2.0
+    u_vals = torch.arange(U, device=device, dtype=torch.float32) - float(U) / 2.0
 
     b, y, x, v, u = torch.meshgrid(b_vals, y_vals, x_vals, v_vals, u_vals, indexing='ij')
 
@@ -43,9 +44,9 @@ def depthRendering(central, ray_depths, lfsize):
     x_t = x + u * ray_depths
 
     # Integer interpolation indices
-    y_1 = torch.floor(y_t).to(torch.int32)
+    y_1 = (torch.floor(y_t)).to(torch.int32)
     y_2 = y_1 + 1
-    x_1 = torch.floor(x_t).to(torch.int32)
+    x_1 = (torch.floor(x_t)).to(torch.int32)
     x_2 = x_1 + 1
 
     # Clamp to valid range
@@ -59,33 +60,42 @@ def depthRendering(central, ray_depths, lfsize):
     v_1 = torch.zeros_like(b_1, dtype=torch.int32)
     u_1 = torch.zeros_like(b_1, dtype=torch.int32)
 
-    # Helper to gather using advanced indexing
-    def gather_nd(img, y_idx, x_idx):
-        """
-        Function that gathers the light field data
+    # Assemble interpolation indices
+    interp_pts_1 = torch.stack([b_1, y_1, x_1, v_1, u_1], dim=-1)
+    interp_pts_2 = torch.stack([b_1, y_2, x_1, v_1, u_1], dim=-1)
+    interp_pts_3 = torch.stack([b_1, y_1, x_2, v_1, u_1], dim=-1)
+    interp_pts_4 = torch.stack([b_1, y_2, x_2, v_1, u_1], dim=-1)
 
-        Arguments:
-        ----------
-        img - Tensor that contains the image values. Expected shape is [B, H, W, 1, 1]
-        y_idx - Tensor that contains the y indices to gather. Expected shape is [B, H, W, V, U]
-        x_idx - Tensor that contains the x indices to gather. Expected shape is [B, H, W, V, U]
+    # Helper to gather using advanced indexing
+    def gather_nd(params, indices):
+        """
+        A PyTorch equivalent of TensorFlow's tf.gather_nd.
+
+        Args:
+            params (torch.Tensor): The source tensor to gather values from.
+            indices (torch.LongTensor): Index tensor of shape [..., index_depth], where each entry specifies
+                                        an index into `params`.
 
         Returns:
-        -------
-        Returns the calulated lambertian light field. Output shape is [B, H, W, V, U]
+            torch.Tensor: Gathered values.
         """
-        B, H, W, _, _ = img.shape
-        img = img.squeeze(-1).squeeze(-1)  # [B, H, W]
-        val = []
-        for b in range(B):
-            val.append(img[b, y_idx[b], x_idx[b]])
-        return torch.stack(val)
+        # indices shape: [*, index_depth]
+        orig_shape = indices.shape[:-1]  # Shape of the output
+        index_depth = indices.shape[-1]
+        
+        # Convert indices to tuple of slices
+        indices = indices.reshape(-1, index_depth).T  # Shape: [index_depth, num_indices]
+        gathered = params[tuple(indices)]  # Advanced indexing
+
+        return gathered.reshape(orig_shape)
+
+
 
     # Gather neighbors
-    lf_1 = gather_nd(c, y_1, x_1)
-    lf_2 = gather_nd(c, y_2, x_1)
-    lf_3 = gather_nd(c, y_1, x_2)
-    lf_4 = gather_nd(c, y_2, x_2)
+    lf_1 = gather_nd(c, interp_pts_1)
+    lf_2 = gather_nd(c, interp_pts_2)
+    lf_3 = gather_nd(c, interp_pts_3)
+    lf_4 = gather_nd(c, interp_pts_4)
 
     # Compute interpolation weights
     y_1f = y_1.to(dtype)
