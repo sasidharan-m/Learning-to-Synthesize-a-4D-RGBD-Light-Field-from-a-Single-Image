@@ -11,20 +11,20 @@ import torchvision.transforms.functional as TF
 from torchvision.utils import save_image
 import numpy as np
 
-CHECKPOINT = "/home/sasidharan/Projects/Plenoptic Camera/Notebooks/forward_model_final.pth"
-INPUT_DIR = "/home/sasidharan/Projects/Plenoptic Camera/Datasets/Flower Dataset/Sub-Aperture Images/Test/IMG_0003"
-OUTPUT_DIR = "/home/sasidharan/Projects/Plenoptic Camera/Code/Learning-to-Synthesize-a-4D-RGBD-Light-Field-from-a-Single-Image/results"
+CHECKPOINT = "./weights/checkpoint_epoch100.pth"
+INPUT_DIR = "./test_data/IMG_1837"
+OUTPUT_DIR = "./results"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Configuration
 lfsize    = (432, 620, 9, 9)        # replace V, U with your angular dims
 disp_mult = 4.0                  # same as training
-device    = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device    = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 # 1) Load model
 model = ForwardModel(lfsize=lfsize, disp_mult=disp_mult).to(device)
 checkpoint = torch.load(CHECKPOINT, map_location=device)
-model.load_state_dict(checkpoint)
+model.load_state_dict(checkpoint["model_state"])
 model.eval()
 
 # 2) Prepare a batch of center views (aif_batch), e.g. from a DataLoader or single image
@@ -47,7 +47,7 @@ views = views.permute(2, 3, 4, 0, 1)  # [V,U,3,H,W]
 views = views.reshape(V*U, C, H, W)
 
 # if lf_shear is in [-1,1], map back to [0,1]
-# views = (views + 1.0) * 0.5
+views = (views + 1.0) * 0.5
 views = views.clamp(0,1)
 
 depths = ray_depths.squeeze(0)
