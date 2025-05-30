@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 training_data_path              = "/home/sasidharan/Projects/Plenoptic Camera/Datasets/Flower Dataset/Sub-Aperture Images/Train"
 weights_save_path               = "/home/sasidharan/Projects/Plenoptic Camera/Code/Learning-to-Synthesize-a-4D-RGBD-Light-Field-from-a-Single-Image/weights"
+checkpoint_path                 = "/home/sasidharan/Projects/Plenoptic Camera/Code/Learning-to-Synthesize-a-4D-RGBD-Light-Field-from-a-Single-Image/weights/checkpoint_epoch100_restore.pth"
 grid                            = (13, 13)                # U×V views
 crop_size                       = (256, 256)              # spatial-crop height & width
 batch_size                      = 2
@@ -33,6 +34,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = ForwardModel(lfsize=lfsize, disp_mult=disp_mult).to(device)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+checkpoint = None
+
+if checkpoint_path != "" and os.path.exists(checkpoint_path):
+    print("Loading model state from checkpoint...")
+    checkpoint = torch.load(checkpoint_path)
+    model.load_state_dict(checkpoint["model_state"])
+    optimizer.load_state_dict(checkpoint["optim_state"])
 
 for epoch in range(epochs):
     model.train()
