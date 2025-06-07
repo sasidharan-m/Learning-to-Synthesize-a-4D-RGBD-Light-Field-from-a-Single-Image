@@ -148,8 +148,8 @@ def test(weights, input_image, output_dir, save_ray_depths=False, save_lambertia
         # Calculate the depths from the disparity
         depths = (3000 * 0.05) / depths
         # Clip the values from 18.75 to 50. Might have to change the values for better visuzlization
-        vmin = 18.75
-        vmax = 50
+        vmin = 35
+        vmax = 43
         depths = np.clip(depths, vmin, vmax)
         # Taking log of the values for better visualization
         depth_log = np.log10(depths)
@@ -161,7 +161,7 @@ def test(weights, input_image, output_dir, save_ray_depths=False, save_lambertia
             out_path = os.path.join(output_dir, 'estimated_disparity')
             os.makedirs(out_path, exist_ok=True)
             out_path = os.path.join(output_dir, 'estimated_disparity', f"view_{v}_{u}.png")
-            colormap = plt.get_cmap('plasma')
+            colormap = plt.get_cmap('plasma_r')
             colored_disp = colormap(depth_log_norm[idx])
             colored_disp = (colored_disp[:, :, :3] * 255).astype(np.uint8)
             depth_image = Image.fromarray(colored_disp)
