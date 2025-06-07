@@ -67,10 +67,10 @@ class LFSubApertureDataset(Dataset):
         """
         folder = self.grid_dirs[idx]
         views = []
-        for u in range(2, self.U-2, 1):
+        for v in range(2, self.V-2, 1):
             row = []
-            for v in range(2, self.V-2, 1):
-                path = os.path.join(folder, f"view_{u:02d}_{v:02d}.png")
+            for u in range(2, self.U-2, 1):
+                path = os.path.join(folder, f"view_{v:02d}_{u:02d}.png")
                 img = Image.open(path).convert("RGB")
                 if self.transform:
                     img = self.transform(img)
@@ -84,12 +84,13 @@ class LFSubApertureDataset(Dataset):
                 img_t = (img_t - 0.5) * 2.0
                 
                 row.append(img_t)
-            views.append(torch.stack(row, dim=0))  # [V,3,H,W]
-        lf = torch.stack(views, dim=0)             # [U,V,3,H,W]
+            views.append(torch.stack(row, dim=0))  # [U,3,H,W]
+        lf = torch.stack(views, dim=0)             # [V,U,3,H,W]
+
 
         # center view tensor [3,H,W]
-        u0, v0 = self.U//2, self.V//2
-        center = lf[u0, v0]                        # [3,H,W]
+        u0, v0 = (self.U-4)//2, (self.V-4)//2
+        center = lf[v0, u0]                        # [3,H,W]
 
         # pick random crop coords
         _, H, W = center.shape
@@ -107,8 +108,8 @@ class LFSubApertureDataset(Dataset):
         # center_crop: [3, h, w] → [h, w, 3]
         # center_crop = center_crop.permute(1, 2, 0)
 
-        # lf_crop: [U, V, 3, h, w] → [h, w, V, U, 3]
-        lf_crop = lf_crop.permute(3, 4, 1, 0, 2)
+        # lf_crop: [V, U, 3, h, w] → [h, w, V, U, 3]
+        lf_crop = lf_crop.permute(3, 4, 0, 1, 2)
 
         return center_crop, lf_crop
 

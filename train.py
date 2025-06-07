@@ -11,9 +11,10 @@ import torch.optim as optim
 import os
 from tqdm import tqdm
 
-training_data_path              = "/home/sasidharan/Projects/Plenoptic Camera/Datasets/Flower Dataset/Sub-Aperture Images/Train"
+# training_data_path              = "/home/sasidharan/Projects/Plenoptic Camera/Datasets/Flower Dataset/Sub-Aperture Images/Train"
+training_data_path              = "/home/sasidharan/Projects/Plenoptic Camera/Datasets/Test Dataset"
 weights_save_path               = "/home/sasidharan/Projects/Plenoptic Camera/Code/Learning-to-Synthesize-a-4D-RGBD-Light-Field-from-a-Single-Image/weights"
-checkpoint_path                 = "/home/sasidharan/Projects/Plenoptic Camera/Code/Learning-to-Synthesize-a-4D-RGBD-Light-Field-from-a-Single-Image/weights/checkpoint_epoch100_restore.pth"
+checkpoint_path                 = ""
 grid                            = (13, 13)                # U×V views
 crop_size                       = (256, 256)              # spatial-crop height & width
 batch_size                      = 2
@@ -28,7 +29,7 @@ loader = getDataloader(
     training_data_path, grid, spatial_crop=crop_size,
     batch_size=batch_size,
     resize=None,               
-    num_workers=2
+    num_workers=4
 )
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -85,7 +86,7 @@ for epoch in range(epochs):
     if(((epoch + 1) % 1 == 0) or epoch == 0):
         print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}")
 
-    if(((epoch + 1) % 100 == 0) and epoch > 1):
+    if(((epoch + 1) % 10 == 0) and epoch > 1):
         ckpt = {
             "epoch": epoch + 1,
             "model_state": model.state_dict(),
