@@ -12,13 +12,16 @@ Paper: https://arxiv.org/abs/1708.03292
 
 
 ### Synthesized 4D Light Field
-
+<p align="left">
+  <img src="results/view1.gif" width="400"/>
+  <img src="results/view2.gif" width="400"/>
+</p>
 
 ## Refocus Results
 ### Image focused on foreground
 <p align="left">
-  <img src="results/view1.gif" width="400"/>
-  <img src="results/view2.gif" width="400"/>
+  <img src="results/refocus_fg1.png" width="400"/>
+  <img src="results/refocus_fg2.png" width="400"/>
 </p>
 
 ### Image focused on background
