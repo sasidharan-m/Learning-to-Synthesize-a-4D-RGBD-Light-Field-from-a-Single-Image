@@ -3,6 +3,25 @@ PyTorch Implementation of the paper "Learning to Synthesize a 4D RGBD Light Fiel
 
 Paper: https://arxiv.org/abs/1708.03292 
 
+## Light Field Synthesis Results
+### Input 2D Image
+
+### Synthesized 4D Light Field
+
+
+## Refocus Results
+### Image focused on foreground
+<p align="center">
+  <img src="results/refocus_fg1.png" width="200"/>
+  <img src="results/refocus_fg2.png" width="200"/>
+</p>
+
+### Image focused on background
+<p align="center">
+  <img src="results/refocus_bg1.png" width="200"/>
+  <img src="results/refocus_bg2.png" width="200"/>
+</p>
+
 ## 🚀 Instructions for Training
 
 - ✅ Setup the Python environment:
