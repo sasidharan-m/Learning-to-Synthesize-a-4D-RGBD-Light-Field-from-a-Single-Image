@@ -148,7 +148,7 @@ def train(training_data_path, weights_save_path, checkpoint_path="", grid=(13,13
         if(((epoch + 1) % 1 == 0) or epoch == 0):
             print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}")
 
-        if(((epoch + 1) % 10 == 0) and epoch > 1):
+        if(((epoch + 1) % 100 == 0) and epoch > 1):
             ckpt = {
                 "epoch": epoch + 1,
                 "model_state": model.state_dict(),

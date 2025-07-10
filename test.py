@@ -79,7 +79,7 @@ def test(weights, input_image, output_dir, save_ray_depths=False, save_lambertia
     # Load model
     model = ForwardModel(lfsize=lfsize, disp_mult=disp_mult).to(device)
     checkpoint = torch.load(weights, map_location=device)
-    model.load_state_dict(checkpoint["model_state"])
+    model.load_state_dict(checkpoint)
     model.eval()
 
     # Prepare a batch of center views (aif_batch), e.g. from a DataLoader or single image
