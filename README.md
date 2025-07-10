@@ -3,6 +3,11 @@ PyTorch Implementation of the paper "Learning to Synthesize a 4D RGBD Light Fiel
 
 Paper: https://arxiv.org/abs/1708.03292 
 
+## Dataset
+This model was trained on a custom dataset that was captured using the Lytro Illum camera. The captured .LFR images were processed using the plenopticam tool (https://github.com/hahnec/plenopticam) to get the sub-aperture images and the center 9x9 grid of light field data was used.
+
+This model can be used to train the original flower dataset provided my the papers authors here https://cseweb.ucsd.edu/~viscomp/projects/LF/papers/ICCV17/lfsyn/LF_Flowers_Dataset.tar.gz. The model can also be repurposed to use a custom dataset.
+
 ## Light Field Synthesis Results
 ### Input 2D Image
 <p align="left">
