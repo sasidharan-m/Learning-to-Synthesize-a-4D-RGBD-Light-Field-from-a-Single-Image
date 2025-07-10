@@ -10,6 +10,11 @@ Paper: https://arxiv.org/abs/1708.03292
   <img src="results/input2.png" width="400"/>
 </p>
 
+### Generated Ray Depths
+<p align="left">
+  <img src="results/depth1.png" width="400"/>
+  <img src="results/depth2.png" width="400"/>
+</p>
 
 ### Synthesized 4D Light Field
 <p align="left">
