@@ -11,15 +11,15 @@ Paper: https://arxiv.org/abs/1708.03292
 
 ## Refocus Results
 ### Image focused on foreground
-<p align="center">
-  <img src="results/refocus_fg1.png" width="200"/>
-  <img src="results/refocus_fg2.png" width="200"/>
+<p align="left">
+  <img src="results/refocus_fg1.png" width="400"/>
+  <img src="results/refocus_fg2.png" width="400"/>
 </p>
 
 ### Image focused on background
-<p align="center">
-  <img src="results/refocus_bg1.png" width="200"/>
-  <img src="results/refocus_bg2.png" width="200"/>
+<p align="left">
+  <img src="results/refocus_bg1.png" width="400"/>
+  <img src="results/refocus_bg2.png" width="400"/>
 </p>
 
 ## 🚀 Instructions for Training
