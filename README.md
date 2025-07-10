@@ -8,31 +8,37 @@ Paper: https://arxiv.org/abs/1708.03292
 <p align="left">
   <img src="results/input1.png" width="200"/>
   <img src="results/input2.png" width="200"/>
+  <img src="results/input3.png" width="200"/>
+  <img src="results/input4.png" width="200"/>
 </p>
 
 ### Generated Ray Depths
 <p align="left">
   <img src="results/depth1.png" width="200"/>
   <img src="results/depth2.png" width="200"/>
+  <img src="results/depth3.png" width="200"/>
+  <img src="results/depth4.png" width="200"/>
 </p>
 
 ### Synthesized 4D Light Field
 <p align="left">
   <img src="results/view1.gif" width="200"/>
   <img src="results/view2.gif" width="200"/>
+  <img src="results/view3.gif" width="200"/>
+  <img src="results/view4.gif" width="200"/>
 </p>
 
 ## Refocus Results
 ### Image focused on foreground
 <p align="left">
-  <img src="results/refocus_fg1.png" width="200"/>
-  <img src="results/refocus_fg2.png" width="200"/>
+  <img src="results/refocus_fg1.png" width="400"/>
+  <img src="results/refocus_fg2.png" width="400"/>
 </p>
 
 ### Image focused on background
 <p align="left">
-  <img src="results/refocus_bg1.png" width="200"/>
-  <img src="results/refocus_bg2.png" width="200"/>
+  <img src="results/refocus_bg1.png" width="400"/>
+  <img src="results/refocus_bg2.png" width="400"/>
 </p>
 
 ## 🚀 Instructions for Training
