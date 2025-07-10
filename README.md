@@ -3,25 +3,54 @@ PyTorch Implementation of the paper "Learning to Synthesize a 4D RGBD Light Fiel
 
 Paper: https://arxiv.org/abs/1708.03292 
 
-Instructions for Training:
-    --> Setup the python environment using pip install -r requirements.txt <br>
-    --> Prepare the dataset for training. Follow the below file structure: <br>
-        (Visualization shown for 2 image dataset with 13 x 13 grid of aub-apert ure views) <br>
-            Directory containing the Light Field data <br>
-            | <br>
-            --- Folder for image 1 <br>
-            |   | <br>
-            |   --- All sub-aperture images named view_0_0.png to view_12_12.png<br>
-            |<br>
-            |<br>
-            ---- Folder for image 2<br>
-                |<br>
-                --- All sub-aperture images named view_0_0.png to view_12_12.png<br>
-    --> Call the train.py passing in the path of the directory containing the Light Field data and the path to where you want the weights to be stored <br>
-    --> Do train.py -h for information on how to pass in the paths as arguments and other optional arguments <br>
+## 🚀 Instructions for Training
 
+- ✅ Setup the Python environment:
+  ```bash
+  pip install -r requirements.txt
+  ```
 
-Instructions for Inference:<br>
-    --> Setup the python environment using pip install -r requirements.txt <br>
-    --> Call the test.py passing in the path to the pre-trained weights, path to the input image and the path to the directory where the generated Light Field data should be saved<br>
-    --> Do test.py -h for information on how to pass in the paths as arguments and other optional arguments<br>
+- 📦 Prepare the dataset for training. Follow the file structure below (shown for a 2-image dataset with a 13×13 grid of sub-aperture views):
+
+<pre>
+📁 Light Field Dataset Root Directory
+├── 📁 image_1
+│   ├── 📄 view_0_0.png
+│   ├── 📄 view_0_1.png
+│   ├── ...
+│   └── 📄 view_12_12.png
+├── 📁 image_2
+│   ├── 📄 view_0_0.png
+│   ├── 📄 view_0_1.png
+│   ├── ...
+│   └── 📄 view_12_12.png
+</pre>
+
+- ▶️ Run training:
+  ```bash
+  python train.py --training_data_path <path_to_lightfield_data> --weights_save_path <path_to_save_weights>
+  ```
+
+- ℹ️ For help with arguments:
+  ```bash
+  python train.py -h
+  ```
+
+---
+
+## 🧪 Instructions for Inference
+
+- ✅ Setup the Python environment:
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+- ▶️ Run inference:
+  ```bash
+  python test.py ----pretrained_weights <path_to_pretrained_weights> ----input_image <path_to_input_image> --output_path <output_directory>
+  ```
+
+- ℹ️ For help with arguments:
+  ```bash
+  python test.py -h
+  ```
